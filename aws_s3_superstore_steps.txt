@@ -1,0 +1,542 @@
+AWS S3 - Superstore Analytics Learning Notes
+===============================================
+STEP 1 — Prepare your Superstore CSV
+
+Find the cleaned Superstore CSV you already used for your Power BI project.
+
+Make sure you can locate the file on your computer.
+
+For example:
+
+Superstore_Cleaned.csv
+
+Don't change anything else yet.
+
+STEP 2 — Open AWS
+
+Go to:
+
+AWS Console
+
+Sign in with your AWS account.
+
+Once you're inside the AWS Console, search for:
+
+S3
+
+Click S3.
+
+STEP 3 — Create an S3 bucket
+
+Click:
+
+Create bucket
+
+Give it a unique name, for example:
+
+tanisha-superstore-analytics-2026
+
+⚠️ S3 bucket names must be globally unique. If that name is unavailable, add some random numbers.
+
+Keep the settings simple
+
+For now:
+
+AWS Region → choose the region closest to you
+Object Ownership → leave default
+Block all public access → KEEP ON
+Bucket Versioning → leave default
+Encryption → leave default
+
+Then click:
+
+Create bucket
+
+STEP 4 — Upload your Superstore CSV
+
+Open your newly created bucket.
+
+Click:
+
+Upload → Add files
+
+Select your cleaned Superstore CSV.
+
+Then:
+
+Upload
+
+You should now see something like:
+
+tanisha-superstore-analytics-2026
+│
+└── Superstore_Cleaned.csv
+STOP HERE.
+
+At this point, you've already learned something important:
+
+S3 is cloud object storage.
+
+Your CSV is no longer just sitting on your laptop—it is stored in AWS S3.
+
+STEP 5 — Create a folder structure
+
+Inside your bucket, create a folder:
+
+raw/
+
+Then move/upload your CSV inside it:
+
+tanisha-superstore-analytics-2026
+│
+└── raw/
+      └── Superstore_Cleaned.csv
+
+This is how we'll eventually organize the larger project.
+
+Later we'll have:
+
+raw/
+processed/
+curated/
+
+But don't create the whole architecture yet.
+
+STEP 6 — Open AWS Glue
+
+Go back to the AWS Console.
+
+Search:
+
+AWS Glue
+
+Open AWS Glue.
+
+You'll see a Glue console.
+
+The thing we're interested in first is:
+
+Data Catalog
+
+Think of it like this:
+
+S3 = where the actual file lives
+
+Glue Catalog = information about what's inside the file
+
+For example:
+
+S3
+ ↓
+Superstore_Cleaned.csv
+
+Glue Catalog
+ ↓
+Columns
+Data types
+Table information
+Location of data
+STEP 7 — Create a Glue Crawler
+
+In AWS Glue, find:
+
+Crawlers
+
+Click:
+
+Create crawler
+
+Give it a name:
+
+superstore-crawler
+STEP 8 — Tell the crawler where your data is
+
+For the data source, choose:
+
+S3
+
+Then point it to your bucket's:
+
+raw/
+
+So conceptually:
+
+S3
+└── raw/
+      └── Superstore_Cleaned.csv
+
+The crawler will inspect the file and figure out things like:
+
+Order Date → date
+Sales → numeric
+Profit → numeric
+Category → string
+Region → string
+
+That's why it's called a crawler.
+
+STEP 9 — Create a Glue database
+
+When AWS asks where to store the discovered table information, create a database such as:
+
+superstore_analytics
+
+Then finish creating the crawler.
+
+STEP 10 — Run the crawler
+
+After creating it, you'll see:
+
+superstore-crawler
+
+Select it.
+
+Click:
+
+Run
+
+Wait for it to finish.
+
+You want the crawler to show something like:
+
+Succeeded
+
+STEP 11 — Check the Glue Data Catalog
+
+Go to:
+
+Data Catalog → Tables
+
+You should now see a table generated from your CSV.
+
+Something like:
+
+superstore_cleaned
+
+Open the table.
+
+You should see its columns and data types.
+
+🎉 This is your first real AWS data workflow.
+
+You have done:
+
+CSV
+ ↓
+S3
+ ↓
+Glue Crawler
+ ↓
+Glue Data Catalog
+STEP 12 — Open Amazon Athena
+
+Now search AWS for:
+
+Athena
+
+Open it.
+
+Athena allows you to run SQL directly against data stored in S3.
+
+That's why it's particularly useful for you because you already know SQL.
+
+STEP 13 — Select your Glue database
+
+In Athena, select:
+
+superstore_analytics
+
+You should see your table.
+
+Now run:
+
+SELECT *
+FROM superstore_cleaned
+LIMIT 10;
+
+If it returns your Superstore records:
+
+🎉 AWS mini-project is working.
+STEP 14 — Run a few actual analytics queries
+
+Now use your existing SQL knowledge.
+
+Total sales
+SELECT SUM(sales) AS total_sales
+FROM superstore_cleaned;
+Sales by category
+SELECT
+    category,
+    SUM(sales) AS total_sales
+FROM superstore_cleaned
+GROUP BY category
+ORDER BY total_sales DESC;
+Profit by region
+SELECT
+    region,
+    SUM(profit) AS total_profit
+FROM superstore_cleaned
+GROUP BY region
+ORDER BY total_profit DESC;
+Top products
+
+Use the actual product column name from your dataset:
+
+SELECT
+    product_name,
+    SUM(sales) AS total_sales
+FROM superstore_cleaned
+GROUP BY product_name
+ORDER BY total_sales DESC
+LIMIT 10;
+What you've learned
+
+You've now actually used:
+
+AWS S3
+
+Stores the data
+
+↓
+
+AWS Glue
+
+Discovers/catalogs the data
+
+↓
+
+Glue Data Catalog
+
+Stores metadata about the data
+
+↓
+
+Amazon Athena
+
+Queries the data using SQL
+
+Your first AWS architecture
+
+Remember this:
+
+                 SUPERSTORE CSV
+                       │
+                       ▼
+                    AWS S3
+                 (store data)
+                       │
+                       ▼
+                 AWS Glue
+                (crawl data)
+                       │
+                       ▼
+              Glue Data Catalog
+              (metadata/schema)
+                       │
+                       ▼
+                  Athena
+                (SQL queries)
+                       │
+                       ▼
+                 ANALYTICS
+Purpose
+-------
+This file documents my Amazon S3 learning and hands-on practice through AWS Educate.
+
+Important:
+I used AWS Educate for hands-on practice and did not create a personal paid AWS account.
+This repository documents S3 learning and practice honestly; it does not claim a full
+S3 -> Glue -> Athena deployment in a personal AWS account.
+
+1. Open AWS Educate
+-------------------
+- Sign in to AWS Educate.
+- Open the Storage learning course.
+- Open "Getting Started with Amazon S3 Simulation".
+- Start the S3 simulation.
+
+2. Open Amazon S3
+-----------------
+- Open the AWS console provided by the lab.
+- Search for "S3".
+- Open Amazon S3.
+
+3. Create an S3 Bucket
+----------------------
+- Click "Create bucket".
+- Enter a unique bucket name.
+- Keep the recommended/default settings unless the lab gives different instructions.
+- Click "Create bucket".
+
+Example bucket name:
+tanisha-superstore-learning
+
+4. Understand the S3 Structure
+------------------------------
+Amazon S3
+    |
+    +-- Bucket
+          |
+          +-- Object (file)
+
+Bucket:
+A container used to store objects.
+
+Object:
+A file/data item stored in S3.
+
+Key:
+The identifier/path of an object inside the bucket.
+
+Example:
+raw/Superstore.csv
+
+5. Upload an Object
+-------------------
+- Open the bucket.
+- Click "Upload".
+- Add the sample file provided by the simulation.
+- Click "Upload".
+- Open the uploaded object and inspect its details.
+
+Basic workflow:
+
+Local file
+    |
+    v
+Upload
+    |
+    v
+S3 Object
+
+6. Organize Data
+----------------
+A typical analytics storage structure can be organized using prefixes:
+
+superstore-bucket/
+    |
+    +-- raw/
+    |     +-- Superstore.csv
+    |
+    +-- cleaned/
+    |     +-- Superstore_cleaned.csv
+    |
+    +-- curated/
+          +-- sales_summary.csv
+
+Note:
+S3 is object storage. Folder-like paths are used to organize object keys.
+
+7. Download an Object
+---------------------
+- Select the uploaded object.
+- Choose "Download".
+- This demonstrates retrieving data from S3.
+
+S3
+ |
+ v
+Download
+ |
+ v
+Local computer
+
+8. Permissions and Security
+---------------------------
+Learn:
+- Who can access the bucket?
+- Who can read objects?
+- Who can upload objects?
+- Who can delete objects?
+
+For business analytics data, avoid making storage public unless there is a
+specific reason to do so.
+
+Never upload:
+- Passwords
+- Access keys
+- API keys
+- Private credentials
+
+9. How S3 Fits into Data Analytics
+----------------------------------
+A modern cloud analytics architecture can look like:
+
+Superstore Dataset
+        |
+        v
+Amazon S3
+(Raw Data Storage)
+        |
+        v
+AWS Glue
+(Data Catalog / ETL)
+        |
+        v
+Amazon Athena
+(SQL Analytics)
+        |
+        v
+Power BI
+(Dashboard)
+
+10. AWS Service Mapping
+-----------------------
+Analytics Need              AWS Service
+-------------------------   ----------------
+Cloud object storage        Amazon S3
+Data catalog / ETL          AWS Glue
+SQL analytics on S3         Amazon Athena
+Business visualization     Power BI
+
+11. GitHub Documentation
+------------------------
+Recommended repository structure:
+
+aws-superstore-analytics/
+|
++-- aws-s3/
+|   +-- README.md
+|   +-- screenshots/
+|
++-- data/
++-- notebooks/
++-- sql/
++-- images/
++-- README.md
+
+Add screenshots from the AWS Educate simulation showing the work you actually
+completed. Make sure screenshots contain no credentials or sensitive information.
+
+12. What I Learned
+------------------
+- Amazon S3 is AWS object storage.
+- A bucket is a container for stored objects.
+- Objects can be uploaded, viewed, downloaded, and managed.
+- S3 can act as the raw-data storage layer in a cloud analytics architecture.
+- S3 concepts connect naturally to downstream services such as Glue and Athena.
+
+13. Interview Questions to Revise
+----------------------------------
+Q1. What is Amazon S3?
+A: Amazon S3 is AWS object storage used to store and retrieve data.
+
+Q2. What is the difference between a bucket and an object?
+A: A bucket is the container; an object is the file/data stored inside it.
+
+Q3. How can S3 be used in a data analytics pipeline?
+A: S3 can store raw datasets before they are cataloged, transformed, queried,
+and visualized.
+
+Q4. What is an S3 key?
+A: A key identifies an object within an S3 bucket and can include a prefix/path.
+
+14. Project Scope
+-----------------
+This repository documents AWS S3 learning and hands-on practice through AWS Educate.
+The complete S3 -> Glue -> Athena pipeline has not been deployed to a personal AWS account.
+
+Next Learning Step
+------------------
+Move to PySpark for hands-on data processing and later connect the concepts to
+Databricks, Delta Lake, Snowflake, and Power BI.
